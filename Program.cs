@@ -55,3 +55,4 @@ Console.WriteLine(secondMessage.GetContent());
 // POLYMORPHISM TEST
 // Hello An!
 // [SYSTEM]An joined the group.
+

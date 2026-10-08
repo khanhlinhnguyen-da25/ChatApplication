@@ -1,0 +1,14 @@
+/gitignore giúp Git bỏ qua những file không cần lưu, chẳng hạn .dll, .exe và dữ liệu build tạm thời
+# .NET build output
+bin/
+obj/
+
+# VS Code settings
+.vscode/
+
+# Visual Studio
+.vs/
+
+# Temporary files
+*.user
+*.suo

@@ -37,6 +37,7 @@ public class User
     //method này sẽ được gọi khi user nhận thông báo (notification)
     public void ReceiveNotification(string notification)
     {
+        //Khi message được gửi ->notify cho những người đang online
         if(IsOnline)
         {
             Console.WriteLine($"Notification for {Name}: {notification}");
