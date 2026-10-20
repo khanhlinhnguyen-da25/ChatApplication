@@ -10,6 +10,10 @@ public class TextMessage : Message
         // base(id, sender)
         // gọi constructor của class cha Message
         // để Message xử lý Id, Sender và Timestamp
+        if(string.IsNullOrWhiteSpace(text))
+        {
+            throw new ArgumentException("Text cannot be null or whitespace.", nameof(text));
+        }
         Text=text;
     }
 

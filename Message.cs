@@ -11,11 +11,20 @@ public abstract class Message
     public DateTime Timestamp {get; }//thời điểm message được tạo
 
     //CONSTRUCTOR của Message
-    protected Message (string id, User sender)
+    protected Message(string id, User sender)
     {
-        Id=id;
-        Sender=sender;
-        Timestamp=DateTime.Now;//Lấy thời gian hiện tại khi message được tạo
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            throw new ArgumentException("Message ID cannot be empty.", nameof(id));
+        }
+        if (sender == null)
+        {
+            throw new ArgumentNullException(nameof(sender), "Sender cannot be null.");
+        }
+
+        Id = id;
+        Sender = sender;
+        Timestamp = DateTime.UtcNow;
     }
         //Mỗi loại Message hiển thị nội dung khác nhau
         //Vì Message không biết loại message cụ thể sẽ hiển thị như thế nào nên method này là abstract

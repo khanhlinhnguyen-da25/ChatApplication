@@ -23,18 +23,17 @@ The project is designed to demonstrate:
 - Composition
 - Observer Pattern
 
-## Current Progress - Week 1
-Completed:
-- Analyzed project requirements
-- Identified candidate classes
-- Created initial class diagram
-- Created C# Console project
-- Implemented User class
-- Implemented Message abstract class
-- Implemented TextMessage
-- Implemented SystemMessage
-- Created IConversation interface skeleton
-- Tested basic Message polymorphism
+## Current Progress
+Implemented:
+- User management and online status
+- Direct and group conversations
+- Participant validation
+- Message history and message validation
+- Text and system messages
+- Per-user, per-message read receipts
+- Online participant notifications
+- Case-insensitive message search
+- `IConversation` interface
 
 ## Project Structure
 ChatApplication/
@@ -50,6 +49,6 @@ ChatApplication/
 Open a terminal in the project folder and run: dotnet run
 
 ## Current Limitations
-The conversation logic has not been implemented yet.
-DirectConversation, GroupConversation, message delivery,
-read receipts, search, and automated tests will be implemented in the next development stages.
+- Data is stored in memory only.
+- There is no real client-server networking.
+- Automated test projects have not been added yet.

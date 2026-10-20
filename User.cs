@@ -6,37 +6,51 @@ public class User
     //get: cho phép người dùng đọc id,  
     //không có set vì: sau khi tạo User thì không cho thay đổi id, mỗi người chỉ có 1 id duy nhất
     //không nên tùy tiện đổi sau khi object đã được tạo
-    public string Id{get; }
-    public string Name{get;set;}//tên người dùng -> cho phép đọc và thay đổi tên
-    public bool IsOnline{get;set;}
+    public string Id { get; }
+    public string Name { get; private set; }
+    public bool IsOnline { get; private set; }
     //cho biết user hiện tại đang onl hay off
     //true -> online ; fale ->offline
 
     //CONSTRUCTOR : được gọi khi tạo một User mới
-    public User(string id , string name)
+    public User(string id, string name)
     {
-        Id=id;
-        Name=name;
-        IsOnline=false;//Khi mới tạo User, mặc định cho user offline
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            throw new ArgumentException("User ID cannot be empty.", nameof(id));
+        }
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("User name cannot be empty.", nameof(name));
+        }
+
+        Id = id;
+        Name = name;
+        IsOnline = false;
     }
     //constructor có nhiệm vụ đảm bảo khi tạo User
     //thì object đã có Id, Name, và có trạng thái online
 
     //chuyển trạng thái user thành online
-    public void goOnline ()
+    public void GoOnline()
     {
-        IsOnline=true;
+        IsOnline = true;
     }
     //chuyển trạng thái user thành offline
-    public void goOffline()
+    public void GoOffline()
     {
-        IsOnline=false;
+        IsOnline = false;
     }
 
     //METHOD
     //method này sẽ được gọi khi user nhận thông báo (notification)
     public void ReceiveNotification(string notification)
     {
+        if (string.IsNullOrWhiteSpace(notification))
+        {
+            throw new ArgumentException("Notification cannot be empty.", nameof(notification));
+        }
+
         //Khi message được gửi ->notify cho những người đang online
         if(IsOnline)
         {
