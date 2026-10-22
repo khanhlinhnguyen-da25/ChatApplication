@@ -1,7 +1,7 @@
-//SystemMessage cũng là một loại Message.
+// SystemMessage là message do hệ thống tạo ra, ví dụ thông báo một user tham gia nhóm.
 public class SystemMessage : Message
 {
-    public string Text {get; }//nội dung thông báo của hệ thống
+    public string Text {get; }// Nội dung thông báo của hệ thống.
     public SystemMessage(string id, User sender, string text) : base(id, sender)
     {
         if(string.IsNullOrWhiteSpace(text))
@@ -13,17 +13,8 @@ public class SystemMessage : Message
 
     public override string GetContent()
     {
+        // Thêm tiền tố để người đọc phân biệt system message với tin nhắn thường.
         return "[SYSTEM] " + Text;
     }
 
 }
-// POLYMORPHISM:
-// Cả 2 đều có GetContent()
-// Nhưng: 
-// TextMessage
-// GetContent()
-// -> "Hello An"
-
-// SystemMessage
-// GetContent()
-// -> "[SYSTEM] An joined the group."

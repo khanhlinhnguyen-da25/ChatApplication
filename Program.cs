@@ -2,8 +2,7 @@
 {
     public static void Main(string[] args)
     {
-        // Test User class
-        //test class User
+        // Tạo dữ liệu mẫu để minh họa các chức năng của ứng dụng.
         User user1 = new User("U001", "Linh");
         User user2 = new User("U002", "Duy");
         User user3 = new User("U003", "Huy");
@@ -22,13 +21,13 @@
         Console.WriteLine($"{user2.Name} - Online: {user2.IsOnline}");
         Console.WriteLine($"{user3.Name} - Online: {user3.IsOnline}");
 
-        //gửi Notification
+        // Notification chỉ được in ra nếu user đang online.
         Console.WriteLine("\nNotification test: ");
         user1.ReceiveNotification("You have a new message.");
         user2.ReceiveNotification("You have a new message.");
         user3.ReceiveNotification("You have a new message.");
 
-        //Direct Conversation test
+        // Minh họa conversation riêng: chỉ có đúng hai participant.
         Console.WriteLine("\nDirect Conversation test");
         DirectConversation directConversation = new DirectConversation("DC001", "Direct Chat", new List<User> { user1, user2 });
         directConversation.PrintParticipants();
@@ -48,7 +47,7 @@
             Console.WriteLine($"Found message: {message.GetContent()}");
         }
 
-        //Group Conversation test
+        // Minh họa conversation nhóm với nhiều participant.
         Console.WriteLine("\nGroup Conversation test");
         GroupConversation groupConversation = new GroupConversation("GC001", "Group Chat", new List<User> { user1, user2, user3 });
         groupConversation.PrintParticipants();

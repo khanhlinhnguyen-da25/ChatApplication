@@ -1,15 +1,11 @@
-//TextMessage kế thừa từ Message
-// Đây là loại message chứa nội dung văn bản bình thường
+// TextMessage kế thừa từ Message và chứa nội dung văn bản thông thường.
 public class TextMessage : Message
 {
-    public string Text {get; }//nội dung của tin nhắn
+    public string Text {get; }// Nội dung của tin nhắn.
 
-    //CONSTRUCTOR
+    // Constructor truyền ID và sender lên Message để lớp cha xử lý phần dùng chung.
     public TextMessage(string id, User sender, string text) : base(id, sender)
     {
-        // base(id, sender)
-        // gọi constructor của class cha Message
-        // để Message xử lý Id, Sender và Timestamp
         if(string.IsNullOrWhiteSpace(text))
         {
             throw new ArgumentException("Text cannot be null or whitespace.", nameof(text));
@@ -17,8 +13,7 @@ public class TextMessage : Message
         Text=text;
     }
 
-    //Message yêu cầu class con phải có GetContent()
-    // nên TextMessage phải override method này
+    // Trả về nội dung văn bản khi conversation cần hiển thị message.
     public override string GetContent()
     {
         return Text;

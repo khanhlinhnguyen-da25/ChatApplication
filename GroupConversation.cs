@@ -1,11 +1,16 @@
+// Đại diện cho cuộc trò chuyện nhóm, có thể có từ hai người trở lên.
 public class GroupConversation : IConversation
 {
+    // Thông tin cơ bản và dữ liệu được quản lý bởi conversation.
     public string Id { get; }
     public string Name { get; }
     public List<User> Participants { get; }
     public List<Message> Messages { get; }
 
+    // Mỗi user có một tập message riêng để theo dõi trạng thái đã đọc.
     private Dictionary<User, HashSet<Message>> readStatus = new Dictionary<User, HashSet<Message>>();
+
+    // Khởi tạo conversation nhóm và loại bỏ dữ liệu người dùng không hợp lệ.
     public GroupConversation(string id, string name, List<User> participants)
     {
         if (string.IsNullOrWhiteSpace(id))
@@ -38,15 +43,16 @@ public class GroupConversation : IConversation
         Participants = participants;
         Messages = new List<Message>();
 
-        // Initialize read status for each participant
+        // Mỗi participant bắt đầu với trạng thái chưa đọc message nào.
         foreach (var participant in participants)   
         {
-            readStatus[participant] = new HashSet<Message>(); // Initially, no one has read any messages
+            readStatus[participant] = new HashSet<Message>();
         }
     }
 
     public void PrintParticipants()
     {
+        // In tất cả thành viên hiện tại của nhóm.
         Console.WriteLine($"Participants in Group Conversation '{Name}':");
         foreach (var participant in Participants)
         {
@@ -56,6 +62,7 @@ public class GroupConversation : IConversation
 
     public void PrintMessageHistory()
     {
+        // Hiển thị message theo đúng thứ tự đã được thêm vào danh sách.
         Console.WriteLine($"Message history for Group Conversation '{Name}':");
         foreach (var message in Messages)
         {
@@ -74,7 +81,8 @@ public class GroupConversation : IConversation
             throw new InvalidOperationException("User is already a participant of the group conversation.");
         }
         Participants.Add(user);
-        readStatus[user] = new HashSet<Message>(); // Initialize read status for the new participant
+        // Thành viên mới chưa được đánh dấu đã đọc các message cũ.
+        readStatus[user] = new HashSet<Message>();
     }
 
     public void SendMessage(Message message)
@@ -87,8 +95,11 @@ public class GroupConversation : IConversation
         {
             throw new InvalidOperationException("Sender is not a participant of the group conversation.");
         }
+
+        // Message chỉ được thêm sau khi xác thực sender thuộc nhóm.
         Messages.Add(message);
 
+        // Gửi notification cho mọi thành viên khác, không gửi lại cho sender.
         foreach (var participant in Participants.Where(participant => participant != message.Sender))
         {
             participant.ReceiveNotification($"New message from {message.Sender.Name}.");
@@ -97,6 +108,7 @@ public class GroupConversation : IConversation
 
     public void MarkAsRead(User user, Message message)
     {
+        // Kiểm tra quan hệ giữa user/message và conversation trước khi ghi nhận.
         ValidateReadReceiptArguments(user, message);
         readStatus[user].Add(message);
     }
@@ -114,6 +126,7 @@ public class GroupConversation : IConversation
             throw new ArgumentException("Keyword cannot be null or whitespace.", nameof(keyword));
         }
 
+        // Tìm kiếm nội dung của tất cả loại message mà không phân biệt hoa thường.
         return Messages
             .Where(message => message.GetContent().Contains(keyword, StringComparison.OrdinalIgnoreCase))
             .ToList();
@@ -121,6 +134,7 @@ public class GroupConversation : IConversation
 
     private void ValidateReadReceiptArguments(User user, Message message)
     {
+        // Không cho phép đánh dấu đọc một message ngoài conversation hiện tại.
         if (user == null)
         {
             throw new ArgumentNullException(nameof(user), "User cannot be null.");

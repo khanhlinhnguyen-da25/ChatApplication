@@ -1,37 +1,37 @@
 using System.Collections.Generic;
-//Interface chung cho các loại Conversation
-//DirectConversation và GroupConversation sau này đều sẽ implement interface này
+// Interface chung cho các loại conversation.
+// DirectConversation và GroupConversation cùng triển khai các hành vi này.
 
 public interface IConversation
 {
-    string Id{get; }//ID của conversation
-    string Name{get; }
+    string Id{get; }// ID duy nhất của conversation.
+    string Name{get; }// Tên hiển thị của conversation.
 
-    // Danh sách các user tham gia conversation
+    // Danh sách các user đang tham gia conversation.
     List<User> Participants{get; }
 
-    // Danh sách các message trong conversation
+    // Các message được gửi trong conversation, theo thứ tự gửi.
     List<Message> Messages{get; }
 
-    // In ra danh sách các user tham gia conversation
+    // In ra danh sách các user tham gia conversation.
     void PrintParticipants();
 
-    // In ra lịch sử message trong conversation
+    // In ra lịch sử message trong conversation.
     void PrintMessageHistory();
     
-    // Thêm một user vào conversation
+    // Thêm một user vào conversation.
     void AddParticipant(User user);
 
-    // Gửi một message vào conversation
+    // Gửi message và xử lý các notification liên quan.
     void SendMessage(Message message);
 
-    // Đánh dấu user đã đọc tới message này
+    // Đánh dấu một user đã đọc message cụ thể.
     void MarkAsRead(User user, Message message);
 
-    // Kiểm tra user đã đọc message hay chưa
+    // Kiểm tra trạng thái đã đọc của một user với một message.
     bool HasUserReadMessage(User user, Message message);
 
-    // Tìm các message có chứa keyword
+    // Tìm các message có nội dung chứa keyword.
     List<Message> SearchMessages(string keyword);
 
 }

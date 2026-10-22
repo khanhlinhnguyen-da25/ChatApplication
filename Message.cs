@@ -1,16 +1,14 @@
 using System;
-//Message là abstract class vì nó chỉ đại diện/ là cái khung là khái niệm chung "tìn nhắn:
-//Trong chương trình, ta sẽ tạo các loại tin nhắn cụ thể
-//TextMessage
-//SystemMessage
+// Message là abstract class, đóng vai trò là khuôn mẫu chung cho mọi loại tin nhắn.
+// Các lớp con hiện có: TextMessage và SystemMessage.
 
 public abstract class Message
 {
-    public string Id {get; }// Id riêng của tin nhắn
-    public User Sender {get; }//người gửi message
-    public DateTime Timestamp {get; }//thời điểm message được tạo
+    public string Id {get; }// ID riêng của tin nhắn.
+    public User Sender {get; }// Người gửi message.
+    public DateTime Timestamp {get; }// Thời điểm message được tạo.
 
-    //CONSTRUCTOR của Message
+    // Constructor protected: chỉ các lớp kế thừa mới có thể gọi trực tiếp.
     protected Message(string id, User sender)
     {
         if (string.IsNullOrWhiteSpace(id))
@@ -24,12 +22,13 @@ public abstract class Message
 
         Id = id;
         Sender = sender;
+        // Dùng UTC để thời gian không phụ thuộc vào múi giờ của máy chạy ứng dụng.
         Timestamp = DateTime.UtcNow;
     }
-        //Mỗi loại Message hiển thị nội dung khác nhau
-        //Vì Message không biết loại message cụ thể sẽ hiển thị như thế nào nên method này là abstract
-        //các class con BẮT BUỘC phải override
-        public abstract string GetContent();
+
+    // Mỗi loại message có cách tạo nội dung hiển thị riêng.
+    // Lớp con bắt buộc override method này (tính đa hình).
+    public abstract string GetContent();
  
     
 }
