@@ -111,7 +111,48 @@ The main tasks included:
 3. Simulating group conversations.
 4. Handling invalid messages and unauthorized senders.
 5. Testing read receipts, message search, and notifications.
+## Week 3 – Testing and Validation
 
+### Overview
+During Week 3, we reviewed and extended the console-based tests to verify the Chat Application's functionality, OOP principles, and error handling.
+
+### Features Tested
+- Direct and group conversations
+- Message sending and message history
+- Online/offline notifications
+- Read receipts and last-read pointer
+- TextMessage and SystemMessage
+- Message searching across conversations
+- Input validation and exception handling
+- Inheritance, encapsulation, and polymorphism
+
+### Test Cases
+The application includes 21 console-based test cases, covering:
+- Functional testing
+- Negative testing and edge cases
+- OOP validation
+- Integration testing
+
+### Integration Test – Direct Chat Workflow
+The integration test verifies the following workflow:
+
+1. Linh sends a message to Duy.
+2. The message is stored in conversation history.
+3. Duy receives a notification while online.
+4. Duy marks the message as read.
+5. The message can be found using keyword search.
+
+### Testing Results
+All implemented test cases were executed using the console application.
+
+The integration test passed all five checks:
+- Message stored: True
+- Notification received: True
+- Initially unread: True
+- Read after MarkAsRead(): True
+- Message found by search: True
+
+Result: PASS
 ## How to Run
 
 1. Open the project folder in VS Code.

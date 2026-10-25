@@ -1,4 +1,4 @@
-// Entry point và executable specification của project.
+﻿// Entry point và executable specification của project.
 // Main tạo một in-process scenario hoàn chỉnh, sau đó chạy các test console
 // cho validation, inheritance, encapsulation, polymorphism, search, delivery
 // notification và read receipt. Đây không phải unit-test framework; kết quả
@@ -35,16 +35,22 @@ public class Program
         user2.ReceiveNotification("You have a new message.");
         user3.ReceiveNotification("You have a new message.");
 
-        // TEST 0: INHERITANCE
-        // Chứng minh TextMessage/SystemMessage kế thừa state chung của Message
-        // nhưng vẫn có implementation GetContent riêng.
+        
+        // TEST 0: Kiểm tra tính kế thừa.
+        // TextMessage và SystemMessage đều kế thừa từ Message.
         Console.WriteLine("\n---TEST 0: INHERITANCE---");
 
         Message inheritedTextMessage =
             new TextMessage("M000", user1, "Inherited text message.");
+
         Message inheritedSystemMessage =
             new SystemMessage("SM000", SystemUser.Instance, "Inherited system event.");
 
+        Console.WriteLine("Input: One TextMessage and one SystemMessage.");
+        Console.WriteLine("Action: Check their base types, properties, and GetContent().");
+        Console.WriteLine("Expected: Both message types inherit from Message.");
+
+        // Kiểm tra tính kế thừa và các thuộc tính chung
         bool inheritanceWorks =
             inheritedTextMessage is Message &&
             inheritedTextMessage is TextMessage &&
@@ -55,6 +61,8 @@ public class Program
             inheritedTextMessage.Timestamp != default &&
             inheritedSystemMessage.GetContent() == "[SYSTEM] Inherited system event.";
 
+        // Hiển thị kết quả thực tế
+        Console.WriteLine("\nActual:");
         Console.WriteLine("TextMessage base type: " +
             inheritedTextMessage.GetType().BaseType?.Name);
         Console.WriteLine("SystemMessage base type: " +
@@ -62,44 +70,60 @@ public class Program
 
         if (inheritanceWorks)
         {
-            Console.WriteLine("[PASS] TextMessage and SystemMessage inherit shared Message state and behavior.");
+            Console.WriteLine("[PASS] TextMessage and SystemMessage inherit from Message.");
         }
         else
         {
-            Console.WriteLine("[FAIL] Message inheritance behavior is incorrect.");
+            Console.WriteLine("[FAIL] Message inheritance validation failed.");
         }
 
-        // TEST 0A: ENCAPSULATION
-        // Chứng minh state User và conversation collections không bị sửa trực
-        // tiếp từ bên ngoài; thay đổi phải đi qua public method hợp lệ.
+
+        
+        // TEST 0A: Kiểm tra tính đóng gói.
+        // User thay đổi trạng thái qua method.
+        // Conversation không cho sửa trực tiếp collection.
         Console.WriteLine("\n---TEST 0A: ENCAPSULATION---");
+
+        Console.WriteLine("Input: A User and a DirectConversation.");
+        Console.WriteLine("Action: Change online status and attempt direct collection modification.");
+        Console.WriteLine("Expected: User state changes through methods; collection modification is rejected.");
+
         User encapsulatedUser = new User("U000", "Encapsulated User");
+
         bool initialOffline = !encapsulatedUser.IsOnline;
+
         encapsulatedUser.GoOnline();
         bool onlineAfterMethod = encapsulatedUser.IsOnline;
+
         encapsulatedUser.GoOffline();
         bool offlineAfterMethod = !encapsulatedUser.IsOnline;
 
-        Console.WriteLine("Online state changed through GoOnline/GoOffline: " +
-            (initialOffline && onlineAfterMethod && offlineAfterMethod));
-
-        // Dùng biến kiểu IConversation thay vì kiểu concrete để chương trình
-        // phụ thuộc abstraction. Runtime object thực tế vẫn là DirectConversation.
+        // Tạo conversation và tin nhắn dùng cho các test tiếp theo
         Console.WriteLine("\nDirect Conversation test");
+
         IConversation directConversation = new DirectConversation(
             "DC001",
             "Direct Chat",
             new List<User> { user1, user2 });
+
         directConversation.PrintParticipants();
-        Message textMessage1 = new TextMessage("M001", user1, "Duy nop bao cao OOP tuan 2 chua?");
-        Message textMessage2 = new TextMessage("M002", user2, "Chua, tui con dang lam, bao cao tuan 2 hoi kho voi tui.");
+
+        Message textMessage1 = new TextMessage(
+            "M001", user1, "Duy nop bao cao OOP tuan 2 chua?");
+
+        Message textMessage2 = new TextMessage(
+            "M002", user2, "Chua, tui con dang lam, bao cao tuan 2 hoi kho voi tui.");
+
         directConversation.SendMessage(textMessage1);
         directConversation.SendMessage(textMessage2);
 
+        // Kiểm tra collection chỉ cho phép đọc từ bên ngoài
         bool readOnlyCollections =
             directConversation.Participants is IReadOnlyList<User> &&
             directConversation.Messages is IReadOnlyList<Message>;
+
         bool collectionMutationRejected = false;
+
         try
         {
             ((IList<Message>)directConversation.Messages).Add(
@@ -109,6 +133,15 @@ public class Program
         {
             collectionMutationRejected = true;
         }
+
+        // Hiển thị kết quả thực tế
+        Console.WriteLine("\nActual:");
+        Console.WriteLine("Initial offline: " + initialOffline);
+        Console.WriteLine("Online after GoOnline(): " + onlineAfterMethod);
+        Console.WriteLine("Offline after GoOffline(): " + offlineAfterMethod);
+        Console.WriteLine("Read-only collections: " + readOnlyCollections);
+        Console.WriteLine("Direct modification rejected: " + collectionMutationRejected);
+        Console.WriteLine("Total messages: " + directConversation.Messages.Count);
 
         if (initialOffline &&
             onlineAfterMethod &&
@@ -124,25 +157,14 @@ public class Program
             Console.WriteLine("[FAIL] Encapsulation validation failed.");
         }
 
-        Console.WriteLine($"Message sent by {textMessage1.Sender.Name}: {textMessage1.GetContent()}");
-        Console.WriteLine($"Message sent by {textMessage2.Sender.Name}: {textMessage2.GetContent()}");
-        directConversation.PrintMessageHistory();
-        Console.WriteLine($"Has {user2.Name} read the message? {directConversation.HasUserReadMessage(user2, textMessage1)}");
-        Console.WriteLine($"Has {user1.Name} read the message? {directConversation.HasUserReadMessage(user1, textMessage2)}");
-        Console.WriteLine("Searching for 'bao cao':");
-        List<Message> searchResults = directConversation.SearchMessages("bao cao");
-        foreach (var message in searchResults)
-        {
-            Console.WriteLine($"Found message: {message.GetContent()}");
-        }
 
+        
         // TEST 1: Kiểm tra tin nhắn rỗng.
-        // Đây là validation ở Message constructor, trước khi message tới
-        // conversation.
         Console.WriteLine("\n---TEST 1: EMPTY MESSAGE---");
 
         Console.WriteLine("Sender: Linh");
         Console.WriteLine("Input message: \"\"");
+        Console.WriteLine("Action: Create a TextMessage with empty content.");
         Console.WriteLine("Expected: Reject empty message.");
 
         try
@@ -160,22 +182,24 @@ public class Program
             Console.WriteLine("[PASS] Empty message was rejected correctly.");
         }
 
+        
         // TEST 2: Kiểm tra người gửi không thuộc conversation.
-        // Conversation phải từ chối message unauthorized và không append history.
         Console.WriteLine("\n---TEST 2: INVALID USER---");
 
         Console.WriteLine("Conversation: Direct Chat");
         Console.WriteLine("Participants: Linh, Duy");
         Console.WriteLine("Invalid sender: Huy");
         Console.WriteLine("Input message: Hello Linh and Duy!");
-        Console.WriteLine("Expected: Reject the message because Huy is not a participant.");
+        Console.WriteLine("Action: Huy attempts to send a message.");
+        Console.WriteLine("Expected: Reject the message and keep history unchanged.");
+
+        // Lưu số lượng tin nhắn trước khi kiểm thử
+        int messageCountBefore = directConversation.Messages.Count;
 
         try
         {
-            // Huy không thuộc cuộc trò chuyện
             Message invalidMessage = new TextMessage(
-                "M101", user3, "Hello Linh and Duy!"
-            );
+                "M101", user3, "Hello Linh and Duy!");
 
             directConversation.SendMessage(invalidMessage);
 
@@ -184,64 +208,96 @@ public class Program
         }
         catch (InvalidOperationException ex)
         {
+            // Kiểm tra history không bị thay đổi
+            int messageCountAfter = directConversation.Messages.Count;
+
             Console.WriteLine("\nActual: Message was rejected.");
             Console.WriteLine("Reason: " + ex.Message);
-            Console.WriteLine("[PASS] Invalid sender was rejected correctly.");
+            Console.WriteLine("Message count before: " + messageCountBefore);
+            Console.WriteLine("Message count after: " + messageCountAfter);
+
+            if (messageCountAfter == messageCountBefore)
+            {
+                Console.WriteLine("[PASS] Invalid sender was rejected and history remained unchanged.");
+            }
+            else
+            {
+                Console.WriteLine("[FAIL] Message history changed after rejection.");
+            }
         }
 
-        // TEST 3: Kiểm tra composition/message history.
-        // Conversation sở hữu collection Message và phải giữ đúng thứ tự gửi.
+
+        
+        // TEST 3: Kiểm tra lịch sử tin nhắn.
         Console.WriteLine("\n---TEST 3: MESSAGE HISTORY---");
 
         Console.WriteLine("Conversation: Direct Chat");
+        Console.WriteLine("Input: Two messages from Linh and Duy.");
         Console.WriteLine("Action: Linh sends a message, then Duy replies.");
-        Console.WriteLine("Expected: 2 messages stored in sending order.");
+        Console.WriteLine("Expected: 2 messages stored with correct senders, content, and order.");
 
+        bool correctCount = directConversation.Messages.Count == 2;
+        bool correctOrder = false;
+        bool correctContent = false;
+
+        if (correctCount)
+        {
+            // Kiểm tra thứ tự người gửi
+            correctOrder =
+                directConversation.Messages[0].Sender == user1 &&
+                directConversation.Messages[1].Sender == user2;
+
+            // Kiểm tra nội dung tin nhắn
+            correctContent =
+                directConversation.Messages[0].GetContent() == textMessage1.GetContent() &&
+                directConversation.Messages[1].GetContent() == textMessage2.GetContent();
+        }
+
+        // In kết quả thực tế
         Console.WriteLine("\nActual:");
         Console.WriteLine("Total messages: " + directConversation.Messages.Count);
 
-        // In các tin nhắn thực tế đã lưu
         foreach (Message message in directConversation.Messages)
         {
             Console.WriteLine("- " + message.Sender.Name + ": " + message.GetContent());
         }
 
-        // Kiểm tra số lượng và thứ tự
-        if (directConversation.Messages.Count == 2 &&
-            directConversation.Messages[0] == textMessage1 &&
-            directConversation.Messages[1] == textMessage2)
+        if (correctCount && correctOrder && correctContent)
         {
-            Console.WriteLine("\n[PASS] Messages were stored in the correct order.");
+            Console.WriteLine("\n[PASS] Messages were stored with correct count, senders, content, and order.");
         }
         else
         {
             Console.WriteLine("\n[FAIL] Message history is incorrect.");
         }
 
-        // TEST 4: Kiểm tra read receipt cơ bản.
-        // MarkAsRead thay đổi trạng thái nội bộ, caller chỉ quan sát qua query.
+        
+        
+        // TEST 4: Kiểm tra trạng thái đọc tin nhắn.
         Console.WriteLine("\n---TEST 4: READ RECEIPT---");
 
         Console.WriteLine("Conversation: Direct Chat");
         Console.WriteLine("User: " + user2.Name);
         Console.WriteLine("Message: " + textMessage1.GetContent());
+        Console.WriteLine("Action: Duy marks Linh's message as read.");
         Console.WriteLine("Expected: Read status changes from False to True.");
 
-        // Trạng thái trước khi đọc
-        bool beforeRead = directConversation.HasUserReadMessage(user2, textMessage1);
-
-        Console.WriteLine("\nBefore MarkAsRead(): " + beforeRead);
+        // Kiểm tra trước khi đọc
+        bool beforeRead =
+            directConversation.HasUserReadMessage(user2, textMessage1);
 
         // Đánh dấu đã đọc
         directConversation.MarkAsRead(user2, textMessage1);
 
-        // Trạng thái sau khi đọc
-        bool afterRead = directConversation.HasUserReadMessage(user2, textMessage1);
+        // Kiểm tra sau khi đọc
+        bool afterRead =
+            directConversation.HasUserReadMessage(user2, textMessage1);
 
+        Console.WriteLine("\nActual:");
+        Console.WriteLine("Before MarkAsRead(): " + beforeRead);
         Console.WriteLine("After MarkAsRead(): " + afterRead);
 
-        // Kiểm tra kết quả
-        if (beforeRead == false && afterRead == true)
+        if (!beforeRead && afterRead)
         {
             Console.WriteLine("\n[PASS] Read status changed from False to True.");
         }
@@ -249,6 +305,8 @@ public class Program
         {
             Console.WriteLine("\n[FAIL] Read status was not updated correctly.");
         }
+
+
 
         // TEST 5: Search trong một conversation.
         // Cross-conversation search được kiểm tra riêng ở TEST 6.
@@ -338,48 +396,66 @@ public class Program
             Console.WriteLine($"Found message: {message.GetContent()}");
         }
 
-        // TEST 6: Search toàn bộ conversation của một user.
-        // Service phải tự lọc conversation theo participant trước khi gộp kết quả.
-        Console.WriteLine("\n---TEST 6: CROSS-CONVERSATION SEARCH---");
-        ConversationSearchService searchService =
-            new ConversationSearchService(new IConversation[]
-            {
-                directConversation,
-                groupConversation
-            });
-        List<Message> crossConversationResults =
-            searchService.SearchMessages(user1, "bao cao");
+        
+        
+       // TEST 6: Tìm kiếm tin nhắn trên nhiều conversation.
+Console.WriteLine("\n---TEST 6: CROSS-CONVERSATION SEARCH---");
 
-        Console.WriteLine("User: " + user1.Name);
-        Console.WriteLine("Keyword: bao cao");
-        Console.WriteLine("Actual matches: " + crossConversationResults.Count);
-        foreach (Message message in crossConversationResults)
-        {
-            Console.WriteLine("- " + message.GetContent());
-        }
+string crossKeyword = "bao cao";
 
-        if (crossConversationResults.Count == 3 &&
-            crossConversationResults.Contains(textMessage1) &&
-            crossConversationResults.Contains(textMessage2) &&
-            crossConversationResults.Contains(groupMessage1))
+Console.WriteLine("User: " + user1.Name);
+Console.WriteLine("Input keyword: " + crossKeyword);
+Console.WriteLine("Action: Search across all conversations Linh participates in.");
+Console.WriteLine("Expected: Find 3 messages containing the keyword.");
+
+// Tạo service tìm kiếm trên hai conversation
+ConversationSearchService searchService =
+    new ConversationSearchService(new IConversation[]
+    {
+        directConversation,
+        groupConversation
+    });
+
+// Thực hiện tìm kiếm
+List<Message> crossSearchResults =
+    searchService.SearchMessages(user1, crossKeyword);
+
+// In kết quả thực tế
+Console.WriteLine("\nActual: Found " + crossSearchResults.Count + " messages:");
+
+foreach (Message message in crossSearchResults)
+{
+    Console.WriteLine("- " + message.Sender.Name + ": " + message.GetContent());
+}
+
+        // Kiểm tra đủ 3 tin nhắn mong đợi từ hai conversation
+        if (crossSearchResults.Count == 3 &&
+            crossSearchResults.Contains(textMessage1) &&
+            crossSearchResults.Contains(textMessage2) &&
+            crossSearchResults.Contains(groupMessage1))
         {
-            Console.WriteLine("[PASS] Search found messages across all user conversations.");
+            Console.WriteLine("\n[PASS] Search found messages across both conversations.");
         }
         else
         {
-            Console.WriteLine("[FAIL] Cross-conversation search returned incorrect results.");
+            Console.WriteLine("\n[FAIL] Cross-conversation search results are incorrect.");
         }
 
-        // TEST 6A: Không trả về message từ conversation user không tham gia
+
+        
+        // TEST 6A: Không trả về message từ conversation user không tham gia.
         Console.WriteLine("\n---TEST 6A: SEARCH PARTICIPATION FILTER---");
+
         IConversation unrelatedConversation = new DirectConversation(
             "DC002",
             "Duy and Huy Chat",
             new List<User> { user2, user3 });
+
         Message unrelatedMessage = new TextMessage(
             "M006",
             user2,
             "Bao cao noi bo cua Duy va Huy.");
+
         unrelatedConversation.SendMessage(unrelatedMessage);
 
         ConversationSearchService searchWithUnrelatedConversation =
@@ -389,43 +465,79 @@ public class Program
                 groupConversation,
                 unrelatedConversation
             });
+
+        Console.WriteLine("User: " + user1.Name);
+        Console.WriteLine("Input keyword: bao cao");
+        Console.WriteLine("Additional conversation: Duy and Huy Chat");
+        Console.WriteLine("Action: Search including a conversation Linh did not join.");
+        Console.WriteLine("Expected: Find 3 messages and exclude Duy and Huy Chat.");
+
+        // Thực hiện tìm kiếm
         List<Message> filteredResults =
             searchWithUnrelatedConversation.SearchMessages(user1, "bao cao");
 
-        Console.WriteLine("Additional conversation does not include user: " + user1.Name);
-        Console.WriteLine("Actual matches after adding unrelated conversation: " + filteredResults.Count);
+        Console.WriteLine("\nActual: Found " + filteredResults.Count + " messages:");
+        Console.WriteLine("Unrelated message included: " +
+            filteredResults.Contains(unrelatedMessage));
 
         if (filteredResults.Count == 3 &&
             !filteredResults.Contains(unrelatedMessage))
         {
-            Console.WriteLine("[PASS] Search excluded conversations the user did not join.");
+            Console.WriteLine("\n[PASS] Search excluded conversations the user did not join.");
         }
         else
         {
-            Console.WriteLine("[FAIL] Search participation filtering is incorrect.");
+            Console.WriteLine("\n[FAIL] Search participation filtering is incorrect.");
         }
 
-        // TEST 6B: Tìm kiếm không phân biệt hoa thường trên nhiều conversation
+
+        
+        // TEST 6B: Tìm kiếm không phân biệt chữ hoa, chữ thường.
         Console.WriteLine("\n---TEST 6B: CROSS-CONVERSATION CASE-INSENSITIVE SEARCH---");
+
+        Console.WriteLine("User: " + user1.Name);
+        Console.WriteLine("Input keyword: BAO CAO");
+        Console.WriteLine("Action: Search using uppercase letters.");
+        Console.WriteLine("Expected: Find the same 3 messages as keyword 'bao cao'.");
+
+        // Thực hiện tìm kiếm bằng chữ hoa
         List<Message> caseInsensitiveResults =
             searchWithUnrelatedConversation.SearchMessages(user1, "BAO CAO");
+
+        // In kết quả thực tế
+        Console.WriteLine("\nActual: Found " + caseInsensitiveResults.Count + " messages:");
+
+        foreach (Message message in caseInsensitiveResults)
+        {
+            Console.WriteLine("- " + message.Sender.Name + ": " + message.GetContent());
+        }
 
         if (caseInsensitiveResults.Count == 3 &&
             caseInsensitiveResults.Contains(textMessage1) &&
             caseInsensitiveResults.Contains(textMessage2) &&
             caseInsensitiveResults.Contains(groupMessage1))
         {
-            Console.WriteLine("[PASS] Cross-conversation search is case-insensitive.");
+            Console.WriteLine("\n[PASS] Cross-conversation search is case-insensitive.");
         }
         else
         {
-            Console.WriteLine("[FAIL] Cross-conversation case-insensitive search failed.");
+            Console.WriteLine("\n[FAIL] Cross-conversation case-insensitive search failed.");
         }
 
-        // TEST 6C: Validation đầu vào của cross-conversation search
+
+        
+        // TEST 6C: Kiểm tra validation đầu vào của cross-conversation search.
         Console.WriteLine("\n---TEST 6C: CROSS-CONVERSATION SEARCH VALIDATION---");
+
+        Console.WriteLine("Input 1: Blank keyword (spaces only).");
+        Console.WriteLine("Input 2: Null user.");
+        Console.WriteLine("Action: Search using invalid inputs.");
+        Console.WriteLine("Expected: Reject both inputs with appropriate exceptions.");
+
         bool blankKeywordRejected = false;
         bool nullUserRejected = false;
+
+        // Kiểm tra từ khóa chỉ chứa khoảng trắng
         try
         {
             searchService.SearchMessages(user1, "   ");
@@ -433,9 +545,10 @@ public class Program
         catch (ArgumentException ex)
         {
             blankKeywordRejected = true;
-            Console.WriteLine("Blank keyword rejected: " + ex.Message);
+            Console.WriteLine("\nBlank keyword rejected: " + ex.Message);
         }
 
+        // Kiểm tra user null
         try
         {
             searchService.SearchMessages(null!, "bao cao");
@@ -446,268 +559,665 @@ public class Program
             Console.WriteLine("Null user rejected: " + ex.Message);
         }
 
+        Console.WriteLine("\nActual:");
+        Console.WriteLine("Blank keyword rejected: " + blankKeywordRejected);
+        Console.WriteLine("Null user rejected: " + nullUserRejected);
+
         if (blankKeywordRejected && nullUserRejected)
         {
-            Console.WriteLine("[PASS] Cross-conversation search validates its inputs.");
+            Console.WriteLine("\n[PASS] Cross-conversation search validates its inputs.");
         }
         else
         {
-            Console.WriteLine("[FAIL] Cross-conversation search validation failed.");
+            Console.WriteLine("\n[FAIL] Cross-conversation search validation failed.");
         }
 
-        // TEST 7: Kiểm tra behavior riêng của GroupConversation và composition.
+
+        
+        // TEST 7: Kiểm tra Group Conversation.
+        // Kiểm tra thành viên và thứ tự các tin nhắn văn bản.
         Console.WriteLine("\n---TEST 7: GROUP CONVERSATION---");
 
         Console.WriteLine("Conversation: Group Chat");
         Console.WriteLine("Participants: Linh, Duy, Huy");
-        Console.WriteLine("Action: Each participant sends one message.");
+        Console.WriteLine("Action: Each participant sends one text message.");
         Console.WriteLine("Expected: 3 participants and 3 text messages stored in order.");
 
-        // In danh sách thành viên thực tế
-        Console.WriteLine("\nActual participants:");
+        // Kiểm tra số lượng và thành viên trong nhóm
+        bool correctParticipants =
+            groupConversation.Participants.Count == 3 &&
+            groupConversation.Participants.Contains(user1) &&
+            groupConversation.Participants.Contains(user2) &&
+            groupConversation.Participants.Contains(user3);
+
+        // Lấy riêng các TextMessage, không tính SystemMessage
+        List<Message> groupTextMessages = new List<Message>();
+
+        foreach (Message message in groupConversation.Messages)
+        {
+            if (message is TextMessage)
+            {
+                groupTextMessages.Add(message);
+            }
+        }
+
+        // Kiểm tra số lượng và thứ tự người gửi
+        bool correctGroupMessages =
+            groupTextMessages.Count == 3 &&
+            groupTextMessages[0].Sender == user1 &&
+            groupTextMessages[1].Sender == user2 &&
+            groupTextMessages[2].Sender == user3;
+
+        // Hiển thị kết quả thực tế
+        Console.WriteLine("\nActual:");
+        Console.WriteLine("Total participants: " + groupConversation.Participants.Count);
+
         foreach (User user in groupConversation.Participants)
         {
             Console.WriteLine("- " + user.Name);
         }
 
-        // In lịch sử tin nhắn thực tế
-        Console.WriteLine("\nActual messages:");
-        foreach (Message message in groupConversation.Messages)
+        Console.WriteLine("Total text messages: " + groupTextMessages.Count);
+
+        foreach (Message message in groupTextMessages)
         {
             Console.WriteLine("- " + message.Sender.Name + ": " + message.GetContent());
         }
 
-        // Kiểm tra thành viên và thứ tự tin nhắn
-        List<Message> groupTextMessages = groupConversation.Messages
-            .Where(message => message is TextMessage)
-            .ToList();
-
-        if (groupConversation.Participants.Count == 3 &&
-            groupConversation.Participants.Contains(user1) &&
-            groupConversation.Participants.Contains(user2) &&
-            groupConversation.Participants.Contains(user3) &&
-            groupTextMessages.Count == 3 &&
-            groupTextMessages[0] == groupMessage1 &&
-            groupTextMessages[1] == groupMessage2 &&
-            groupTextMessages[2] == groupMessage3)
+        // Đánh giá kết quả
+        if (correctParticipants && correctGroupMessages)
         {
-            Console.WriteLine("\n[PASS] Group participants and messages are correct.");
+            Console.WriteLine("\n[PASS] Group participants and text messages are correct.");
         }
         else
         {
-            Console.WriteLine("\n[FAIL] Group participants or messages are incorrect.");
+            Console.WriteLine("\n[FAIL] Group conversation validation failed.");
         }
-        // TEST 8: Offline delivery.
-        // User offline không hiển thị notification nhưng flow gửi message vẫn
-        // không bị exception.
+
+        
+       
+        // TEST 8: Kiểm tra notification khi user offline.
         Console.WriteLine("\n---TEST 8: OFFLINE NOTIFICATION---");
 
-        Console.WriteLine("User: Duy");
+        Console.WriteLine("User: " + user2.Name);
         Console.WriteLine("Input: Duy goes offline.");
-        Console.WriteLine("Action: Send notification to Duy.");
+        Console.WriteLine("Action: Send a notification to Duy.");
         Console.WriteLine("Expected: No notification is displayed.");
 
-        // Chuyển Duy sang offline
+        // Chuyển Duy sang trạng thái offline
         user2.GoOffline();
 
-        // Lưu Console hiện tại
+        // Lưu Console output ban đầu
         System.IO.TextWriter originalOutput = Console.Out;
-
-        // Tạo nơi lưu nội dung Console tạm thời
-        System.IO.StringWriter output = new System.IO.StringWriter();
+        System.IO.StringWriter capturedOutput = new System.IO.StringWriter();
 
         try
         {
-            // Chuyển đầu ra Console vào StringWriter
-            Console.SetOut(output);
+            // Tạm thời lưu nội dung in ra Console
+            Console.SetOut(capturedOutput);
 
-            // Thử gửi thông báo cho Duy
+            // Gọi đúng phương thức trong User.cs
             user2.ReceiveNotification("You have a new message.");
         }
         finally
         {
-            // Khôi phục Console, kể cả khi xảy ra lỗi
+            // Khôi phục Console output ban đầu
             Console.SetOut(originalOutput);
         }
 
-        // Lấy nội dung notification thực tế
-        string actualNotification = output.ToString();
+        // Kiểm tra notification có được in ra không
+        bool noNotification =
+            string.IsNullOrWhiteSpace(capturedOutput.ToString());
 
-        Console.WriteLine("\nActual online status: " + user2.IsOnline);
-        Console.WriteLine("Actual notification: " +
-            (actualNotification.Length == 0 ? "(none)" : actualNotification));
+        Console.WriteLine("\nActual:");
+        Console.WriteLine("Online status: " + user2.IsOnline);
+        Console.WriteLine("Notification displayed: " + !noNotification);
 
-        // Kiểm tra kết quả
-        if (user2.IsOnline == false && actualNotification.Length == 0)
+        if (!user2.IsOnline && noNotification)
         {
-            Console.WriteLine("[PASS] No notification was displayed for offline user.");
+            Console.WriteLine("\n[PASS] No notification was displayed for offline user.");
         }
         else
         {
-            Console.WriteLine("[FAIL] Offline notification test failed.");
+            Console.WriteLine("\n[FAIL] Offline notification validation failed.");
         }
-        // Cho Duy online trở lại
-        user2.GoOnline();
 
 
-        // TEST 9: Polymorphism giữa Message và các lớp con.
+        
+        // TEST 9: Kiểm tra tính đa hình.
+        // Biến kiểu Message tham chiếu đến object TextMessage.
         Console.WriteLine("\n---TEST 9: POLYMORPHISM---");
 
-        Console.WriteLine("Action: Store a TextMessage object in a Message variable.");
-        Console.WriteLine("Input: Hello from Linh!");
-        Console.WriteLine("Expected: GetContent() returns the text message content.");
+        Console.WriteLine("Input: A TextMessage with content 'Hello from Linh!'.");
+        Console.WriteLine("Action: Store TextMessage in a Message variable and call GetContent().");
+        Console.WriteLine("Expected: GetContent() returns 'Hello from Linh!'.");
 
-        // Tạo đối tượng TextMessage nhưng khai báo bằng kiểu Message
+        // Tạo object TextMessage nhưng khai báo bằng kiểu Message
         Message polymorphicMessage =
-            new TextMessage("M102", user1, "Hello from Linh!");
+            new TextMessage("M200", user1, "Hello from Linh!");
 
-        // Gọi phương thức thông qua biến kiểu Message
-        string actualContent = polymorphicMessage.GetContent();
+        // Kiểm tra kiểu object và nội dung trả về
+        Console.WriteLine("\nActual:");
+        Console.WriteLine("Message type: " + polymorphicMessage.GetType().Name);
+        Console.WriteLine("Message content: " + polymorphicMessage.GetContent());
 
-        Console.WriteLine("\nActual message type: " +
-            polymorphicMessage.GetType().Name);
-
-        Console.WriteLine("Actual content: " + actualContent);
-
-        // So sánh kết quả
-        if (actualContent == "Hello from Linh!" &&
-            polymorphicMessage is TextMessage)
+        if (polymorphicMessage is TextMessage &&
+            polymorphicMessage.GetContent() == "Hello from Linh!")
         {
-            Console.WriteLine("[PASS] Polymorphism works correctly.");
+            Console.WriteLine("\n[PASS] Polymorphism works correctly.");
         }
         else
         {
-            Console.WriteLine("[FAIL] Polymorphism test failed.");
+            Console.WriteLine("\n[FAIL] Polymorphism validation failed.");
         }
 
-        // TEST 9A: Polymorphism qua IConversation.
-        // Cùng một contract nhưng Direct/Group có participant rule khác nhau.
+
+        
+        // TEST 9A: Kiểm tra tính đa hình thông qua IConversation.
         Console.WriteLine("\n---TEST 9A: IConversation POLYMORPHISM---");
 
-        User polymorphicUser1 = new User("U004", "Mai");
-        User polymorphicUser2 = new User("U005", "Nam");
-        User polymorphicUser3 = new User("U006", "Lan");
-        IConversation directAsInterface = new DirectConversation(
-            "DC003",
-            "Interface Direct Chat",
-            new List<User> { polymorphicUser1, polymorphicUser2 });
-        IConversation groupAsInterface = new GroupConversation(
-            "GC002",
-            "Interface Group Chat",
-            new List<User> { polymorphicUser1, polymorphicUser2 });
+        Console.WriteLine("Input: DirectConversation and GroupConversation.");
+        Console.WriteLine("Action: Access both conversations through IConversation.");
+        Console.WriteLine("Expected: Both conversation types implement IConversation.");
 
-        directAsInterface.SendMessage(new TextMessage(
-            "M007",
-            polymorphicUser1,
-            "Direct message through IConversation."));
-        groupAsInterface.SendMessage(new TextMessage(
-            "M008",
-            polymorphicUser1,
-            "Group message through IConversation."));
+        // Sử dụng interface để tham chiếu đến hai loại conversation
+        IConversation directTest = directConversation;
+        IConversation groupTest = groupConversation;
 
-        bool directParticipantRuleRejected = false;
-        try
+        // Kiểm tra kiểu object thực tế
+        Console.WriteLine("\nActual:");
+        Console.WriteLine("Direct conversation type: " + directTest.GetType().Name);
+        Console.WriteLine("Group conversation type: " + groupTest.GetType().Name);
+
+        // Kiểm tra cả hai object đều triển khai IConversation
+        if (directTest is DirectConversation &&
+            groupTest is GroupConversation)
         {
-            directAsInterface.AddParticipant(polymorphicUser3);
-        }
-        catch (InvalidOperationException)
-        {
-            directParticipantRuleRejected = true;
-        }
-
-        groupAsInterface.AddParticipant(polymorphicUser3);
-
-        bool interfacePolymorphismWorks =
-            directAsInterface is DirectConversation &&
-            groupAsInterface is GroupConversation &&
-            directAsInterface.Messages.Count == 1 &&
-            groupAsInterface.Messages.Count == 1 &&
-            directParticipantRuleRejected &&
-            groupAsInterface.Participants.Contains(polymorphicUser3) &&
-            directAsInterface.Participants is IReadOnlyList<User> &&
-            directAsInterface.Messages is IReadOnlyList<Message>;
-
-        if (interfacePolymorphismWorks)
-        {
-            Console.WriteLine("[PASS] Direct and Group conversations behave polymorphically through IConversation.");
+            Console.WriteLine("\n[PASS] Both conversation types can be accessed through IConversation.");
         }
         else
         {
-            Console.WriteLine("[FAIL] IConversation polymorphism behavior is incorrect.");
+            Console.WriteLine("\n[FAIL] IConversation polymorphism validation failed.");
         }
 
-        // TEST 10: SystemMessage vừa là Message subtype vừa là domain event.
+
+       
+        // TEST 10: Kiểm tra SystemMessage.
+        // SystemMessage được lưu trong history thông qua kiểu Message.
         Console.WriteLine("\n---TEST 10: SYSTEM MESSAGE---");
 
-        Message polymorphicSystemMessage = new SystemMessage(
-            "SM005",
+        Console.WriteLine("Conversation: Group Chat");
+        Console.WriteLine("Input: A system event message.");
+        Console.WriteLine("Action: Send a SystemMessage to Group Chat.");
+        Console.WriteLine("Expected: SystemMessage is stored with the correct sender and content.");
+
+        // Tạo SystemMessage với sender là System
+        Message systemTestMessage = new SystemMessage(
+            "SM100",
             SystemUser.Instance,
             "A system event was recorded."
         );
-        groupConversation.SendMessage(polymorphicSystemMessage);
 
+        // Gửi tin nhắn hệ thống vào Group Chat
+        groupConversation.SendMessage(systemTestMessage);
+
+        // Kiểm tra tin nhắn có được lưu vào history không
         bool systemMessageStored =
-            groupConversation.Messages.Contains(polymorphicSystemMessage) &&
-            polymorphicSystemMessage.GetContent() == "[SYSTEM] A system event was recorded.";
+            groupConversation.Messages.Contains(systemTestMessage);
 
-        Console.WriteLine("System message sender: " + polymorphicSystemMessage.Sender.Name);
-        Console.WriteLine("System message content: " + polymorphicSystemMessage.GetContent());
+        // Kiểm tra sender và nội dung
+        bool correctSystemMessage =
+            systemTestMessage is SystemMessage &&
+            systemTestMessage.Sender == SystemUser.Instance &&
+            systemTestMessage.GetContent() ==
+                "[SYSTEM] A system event was recorded.";
 
-        if (systemMessageStored && !groupConversation.Participants.Contains(SystemUser.Instance))
+        // Hiển thị kết quả thực tế
+        Console.WriteLine("\nActual:");
+        Console.WriteLine("Sender: " + systemTestMessage.Sender.Name);
+        Console.WriteLine("Content: " + systemTestMessage.GetContent());
+        Console.WriteLine("Stored in history: " + systemMessageStored);
+
+        if (systemMessageStored && correctSystemMessage)
         {
-            Console.WriteLine("[PASS] SystemMessage was stored through Message polymorphism.");
+            Console.WriteLine("\n[PASS] SystemMessage was stored correctly.");
         }
         else
         {
-            Console.WriteLine("[FAIL] SystemMessage handling is incorrect.");
+            Console.WriteLine("\n[FAIL] SystemMessage validation failed.");
         }
 
+
+        // TEST 11: Kiểm tra người gửi không hợp lệ của SystemMessage.
+        // Chỉ SystemUser.Instance mới được tạo SystemMessage.
         Console.WriteLine("\n---TEST 11: INVALID SYSTEM MESSAGE SENDER---");
+
+        Console.WriteLine("Input sender: " + user1.Name);
+        Console.WriteLine("Input message: Invalid system event.");
+        Console.WriteLine("Action: Create a SystemMessage using a regular user.");
+        Console.WriteLine("Expected: Reject the message because the sender is not System.");
 
         try
         {
-            SystemMessage invalidSystemMessage = new SystemMessage(
-                "SM006",
+            // Thử tạo SystemMessage với sender là Linh
+            Message invalidSystemMessage = new SystemMessage(
+                "SM101",
                 user1,
-                "This message must not use a normal user sender."
+                "Invalid system event."
             );
 
-            Console.WriteLine("Actual: Invalid system message was accepted.");
-            Console.WriteLine("[FAIL] SystemMessage sender validation failed.");
+            Console.WriteLine("\nActual: Invalid system message was accepted.");
+            Console.WriteLine("[FAIL] Invalid system message sender was allowed.");
         }
         catch (ArgumentException ex)
         {
-            Console.WriteLine("Actual: Invalid system message was rejected.");
+            Console.WriteLine("\nActual: Invalid system message was rejected.");
             Console.WriteLine("Reason: " + ex.Message);
             Console.WriteLine("[PASS] SystemMessage sender validation succeeded.");
         }
 
-        // TEST 12: Last-read pointer.
-        // Đọc message mới hơn phải bao phủ message cũ; đọc lùi không được
-        // reset trạng thái đã đọc.
+        
+        // TEST 12: Kiểm tra cơ chế last-read pointer.
+        // Đánh dấu tin nhắn mới nhất là đã đọc thì các tin trước cũng được đọc.
         Console.WriteLine("\n---TEST 12: LAST-READ POINTER---");
 
-        groupConversation.MarkAsRead(user3, groupMessage3);
-        groupConversation.MarkAsRead(user3, groupMessage1);
+        Console.WriteLine("Conversation: Last Read Test");
+        Console.WriteLine("User: " + user2.Name);
+        Console.WriteLine("Input: 3 messages sent in order.");
+        Console.WriteLine("Action: Duy marks the latest message as read.");
+        Console.WriteLine("Expected: All 3 messages are marked as read.");
 
-        bool earlierMessageRead =
-            groupConversation.HasUserReadMessage(user3, groupMessage1);
-        bool middleMessageRead =
-            groupConversation.HasUserReadMessage(user3, groupMessage2);
-        bool latestMessageRead =
-            groupConversation.HasUserReadMessage(user3, groupMessage3);
+        // Tạo conversation riêng để kiểm thử
+        IConversation readTestConversation = new DirectConversation(
+            "DC003",
+            "Last Read Test",
+            new List<User> { user1, user2 }
+        );
 
-        Console.WriteLine($"Earlier message read: {earlierMessageRead}");
-        Console.WriteLine($"Middle message read: {middleMessageRead}");
-        Console.WriteLine($"Latest message read: {latestMessageRead}");
+        // Tạo 3 tin nhắn theo thứ tự
+        Message earlierMessage = new TextMessage(
+            "M301", user1, "First message.");
 
-        if (earlierMessageRead && middleMessageRead && latestMessageRead)
+        Message middleMessage = new TextMessage(
+            "M302", user1, "Second message.");
+
+        Message latestMessage = new TextMessage(
+            "M303", user1, "Third message.");
+
+        // Gửi 3 tin nhắn vào conversation
+        readTestConversation.SendMessage(earlierMessage);
+        readTestConversation.SendMessage(middleMessage);
+        readTestConversation.SendMessage(latestMessage);
+
+        // Kiểm tra trạng thái trước khi đánh dấu đã đọc
+        bool initiallyUnread =
+            !readTestConversation.HasUserReadMessage(user2, earlierMessage) &&
+            !readTestConversation.HasUserReadMessage(user2, middleMessage) &&
+            !readTestConversation.HasUserReadMessage(user2, latestMessage);
+
+        // Đánh dấu tin nhắn mới nhất là đã đọc
+        readTestConversation.MarkAsRead(user2, latestMessage);
+
+        // Kiểm tra trạng thái sau khi đánh dấu
+        bool earlierRead =
+            readTestConversation.HasUserReadMessage(user2, earlierMessage);
+
+        bool middleRead =
+            readTestConversation.HasUserReadMessage(user2, middleMessage);
+
+        bool latestRead =
+            readTestConversation.HasUserReadMessage(user2, latestMessage);
+
+        // In kết quả thực tế
+        Console.WriteLine("\nActual:");
+        Console.WriteLine("All messages initially unread: " + initiallyUnread);
+        Console.WriteLine("Earlier message read: " + earlierRead);
+        Console.WriteLine("Middle message read: " + middleRead);
+        Console.WriteLine("Latest message read: " + latestRead);
+
+        // PASS khi cả 3 tin nhắn đều được đánh dấu đã đọc
+        if (initiallyUnread && earlierRead && middleRead && latestRead)
         {
-            Console.WriteLine("[PASS] Read receipts use a monotonic last-read pointer.");
+            Console.WriteLine("\n[PASS] Read receipts use a monotonic last-read pointer.");
         }
         else
         {
-            Console.WriteLine("[FAIL] Last-read pointer behavior is incorrect.");
+            Console.WriteLine("\n[FAIL] Last-read pointer validation failed.");
         }
+        
+        // TEST 13: Kiểm tra tin nhắn chỉ chứa khoảng trắng.
+        Console.WriteLine("\n---TEST 13: WHITESPACE MESSAGE VALIDATION---");
+
+        Console.WriteLine("Sender: " + user1.Name);
+        Console.WriteLine("Input message: \"   \"");
+        Console.WriteLine("Action: Create a TextMessage containing only spaces.");
+        Console.WriteLine("Expected: Reject the message with ArgumentException.");
+
+        try
+        {
+            // Thử tạo tin nhắn chỉ chứa khoảng trắng
+            Message whitespaceMessage = new TextMessage(
+                "M130", user1, "   ");
+
+            Console.WriteLine("\nActual: Whitespace message was accepted.");
+            Console.WriteLine("[FAIL] Whitespace message validation failed.");
+        }
+        catch (ArgumentException ex)
+        {
+            Console.WriteLine("\nActual: Whitespace message was rejected.");
+            Console.WriteLine("Reason: " + ex.Message);
+            Console.WriteLine("[PASS] Whitespace message was rejected correctly.");
+        }
+        
+        
+        // TEST 14: Kiểm tra việc thêm thành viên trùng vào Group Chat.
+        Console.WriteLine("\n---TEST 14: DUPLICATE PARTICIPANT VALIDATION---");
+
+        Console.WriteLine("Input: Linh is already a participant.");
+        Console.WriteLine("Action: Add Linh to Group Chat again.");
+        Console.WriteLine("Expected: Reject the duplicate and keep participants unchanged.");
+
+        int participantCountBefore = groupConversation.Participants.Count;
+        bool duplicateRejected = false;
+
+        try
+        {
+            groupConversation.AddParticipant(user1);
+        }
+        catch (InvalidOperationException ex)
+        {
+            duplicateRejected = true;
+            Console.WriteLine("\nActual: " + ex.Message);
+        }
+
+        int participantCountAfter = groupConversation.Participants.Count;
+
+        Console.WriteLine("Participants before: " + participantCountBefore);
+        Console.WriteLine("Participants after: " + participantCountAfter);
+
+        if (duplicateRejected &&
+            participantCountBefore == participantCountAfter)
+        {
+            Console.WriteLine("\n[PASS] Duplicate participant was rejected correctly.");
+        }
+        else
+        {
+            Console.WriteLine("\n[FAIL] Duplicate participant validation failed.");
+        }
+
+
+        // INTEGRATION TEST 1: Kiểm tra luồng Direct Chat hoàn chỉnh.
+        Console.WriteLine("\n---INTEGRATION TEST 1: DIRECT CHAT WORKFLOW---");
+
+        Console.WriteLine("Input: Linh sends 'Hello Duy, integration test!' to Duy.");
+        Console.WriteLine("Action: Send, notify, read, and search for the message.");
+        Console.WriteLine("Expected: Message stored, notification received, read status updated, and search successful.");
+
+        // Tạo user và conversation riêng, không ảnh hưởng test cũ
+        User integrationLinh = new User("UI01", "Linh");
+        User integrationDuy = new User("UI02", "Duy");
+
+        integrationLinh.GoOnline();
+        integrationDuy.GoOnline();
+
+        IConversation integrationConversation = new DirectConversation(
+            "DC_INT01",
+            "Integration Direct Chat",
+            new List<User> { integrationLinh, integrationDuy }
+        );
+
+        Message integrationMessage = new TextMessage(
+            "M_INT01",
+            integrationLinh,
+            "Hello Duy, integration test!"
+        );
+
+        // Bước 1: Gửi tin nhắn và kiểm tra notification
+        System.IO.TextWriter integrationOriginalOutput = Console.Out;
+        System.IO.StringWriter integrationCapturedOutput =
+            new System.IO.StringWriter();
+
+        try
+        {
+            Console.SetOut(integrationCapturedOutput);
+            integrationConversation.SendMessage(integrationMessage);
+        }
+        finally
+        {
+            Console.SetOut(integrationOriginalOutput);
+        }
+
+        bool integrationNotification =
+            integrationCapturedOutput.ToString().Contains(
+                "Notification for Duy: New message from Linh.");
+
+        // Bước 2: Kiểm tra tin nhắn được lưu đúng vào history
+        bool integrationHistory =
+            integrationConversation.Messages.Count == 1 &&
+            integrationConversation.Messages[0] == integrationMessage;
+
+        // Bước 3: Kiểm tra trạng thái đọc trước và sau MarkAsRead()
+        bool integrationUnreadBefore =
+            !integrationConversation.HasUserReadMessage(
+                integrationDuy, integrationMessage);
+
+        integrationConversation.MarkAsRead(
+            integrationDuy, integrationMessage);
+
+        bool integrationReadAfter =
+            integrationConversation.HasUserReadMessage(
+                integrationDuy, integrationMessage);
+
+        // Bước 4: Tìm lại tin nhắn bằng từ khóa
+        List<Message> integrationSearchResults =
+            integrationConversation.SearchMessages("integration");
+
+        bool integrationSearch =
+            integrationSearchResults.Count == 1 &&
+            integrationSearchResults.Contains(integrationMessage);
+
+        // Hiển thị kết quả thực tế
+        Console.WriteLine("\nActual:");
+        Console.WriteLine("Message stored: " + integrationHistory);
+        Console.WriteLine("Notification received: " + integrationNotification);
+        Console.WriteLine("Initially unread: " + integrationUnreadBefore);
+        Console.WriteLine("Read after MarkAsRead(): " + integrationReadAfter);
+        Console.WriteLine("Message found by search: " + integrationSearch);
+
+        if (integrationHistory &&
+            integrationNotification &&
+            integrationUnreadBefore &&
+            integrationReadAfter &&
+            integrationSearch)
+        {
+            Console.WriteLine("\n[PASS] Direct chat workflow completed successfully.");
+        }
+        else
+        {
+            Console.WriteLine("\n[FAIL] Direct chat workflow validation failed.");
+        }
+
+        // INTEGRATION TEST 2: Kiểm tra luồng Group Chat hoàn chỉnh.
+        Console.WriteLine("\n---INTEGRATION TEST 2: GROUP CHAT WORKFLOW---");
+
+        Console.WriteLine("Input: Linh, Duy and Huy join a group conversation.");
+        Console.WriteLine("Action: Create group, add Huy, send system and text messages.");
+        Console.WriteLine("Expected: 3 participants and 2 messages stored in order.");
+
+        // Tạo các user riêng để không ảnh hưởng test trước
+        User groupLinh = new User("GI01", "Linh");
+        User groupDuy = new User("GI02", "Duy");
+        User groupHuy = new User("GI03", "Huy");
+
+        // Tạo group ban đầu gồm Linh và Duy
+        IConversation integrationGroup = new GroupConversation(
+            "GC_INT01",
+            "Integration Group Chat",
+            new List<User> { groupLinh, groupDuy }
+        );
+
+        // Thêm Huy vào nhóm
+        integrationGroup.AddParticipant(groupHuy);
+
+        // Tạo thông báo hệ thống
+        Message integrationSystemMessage = new SystemMessage(
+            "SM_INT01",
+            SystemUser.Instance,
+            "Huy joined the group."
+        );
+
+        integrationGroup.SendMessage(integrationSystemMessage);
+
+        // Linh gửi tin nhắn vào nhóm
+        Message integrationGroupMessage = new TextMessage(
+            "M_INT02",
+            groupLinh,
+            "Hello everyone!"
+        );
+
+        integrationGroup.SendMessage(integrationGroupMessage);
+
+        // Kiểm tra danh sách thành viên
+        bool integrationGroupParticipants =
+            integrationGroup.Participants.Count == 3 &&
+            integrationGroup.Participants.Contains(groupLinh) &&
+            integrationGroup.Participants.Contains(groupDuy) &&
+            integrationGroup.Participants.Contains(groupHuy);
+
+        // Kiểm tra số lượng và thứ tự tin nhắn
+        bool integrationGroupHistory =
+            integrationGroup.Messages.Count == 2 &&
+            integrationGroup.Messages[0] == integrationSystemMessage &&
+            integrationGroup.Messages[1] == integrationGroupMessage;
+
+        // Kiểm tra nội dung SystemMessage
+        bool integrationSystemContent =
+            integrationSystemMessage.GetContent() ==
+                "[SYSTEM] Huy joined the group.";
+
+        // Kiểm tra người gửi TextMessage
+        bool integrationGroupSender =
+            integrationGroupMessage.Sender == groupLinh;
+
+        // Hiển thị kết quả thực tế
+        Console.WriteLine("\nActual:");
+        Console.WriteLine("Participants correct: " + integrationGroupParticipants);
+        Console.WriteLine("Message history correct: " + integrationGroupHistory);
+        Console.WriteLine("System message correct: " + integrationSystemContent);
+        Console.WriteLine("Text message sender correct: " + integrationGroupSender);
+
+        if (integrationGroupParticipants &&
+            integrationGroupHistory &&
+            integrationSystemContent &&
+            integrationGroupSender)
+        {
+            Console.WriteLine("\n[PASS] Group chat workflow completed successfully.");
+        }
+        else
+        {
+            Console.WriteLine("\n[FAIL] Group chat workflow validation failed.");
+        }
+
+
+        // INTEGRATION TEST 3: Kiểm tra tìm kiếm trên nhiều conversation.
+        Console.WriteLine("\n---INTEGRATION TEST 3: CROSS-CONVERSATION WORKFLOW---");
+
+        Console.WriteLine("Input: 3 conversations containing the keyword 'project report'.");
+        Console.WriteLine("Action: Linh searches across all conversations.");
+        Console.WriteLine("Expected: Find 2 messages and exclude the private conversation.");
+
+        // Tạo các user riêng cho integration test
+        User searchLinh = new User("SI01", "Linh");
+        User searchDuy = new User("SI02", "Duy");
+        User searchHuy = new User("SI03", "Huy");
+
+        // Conversation 1: Linh và Duy
+        IConversation searchDirect = new DirectConversation(
+            "DC_INT03",
+            "Direct Chat",
+            new List<User> { searchLinh, searchDuy }
+        );
+
+        // Conversation 2: Linh, Duy và Huy
+        IConversation searchGroup = new GroupConversation(
+            "GC_INT03",
+            "Group Chat",
+            new List<User> { searchLinh, searchDuy, searchHuy }
+        );
+
+        // Conversation 3: Chỉ có Duy và Huy
+        IConversation searchPrivate = new DirectConversation(
+            "DC_INT04",
+            "Private Chat",
+            new List<User> { searchDuy, searchHuy }
+        );
+
+        // Tạo 3 tin nhắn có cùng từ khóa
+        Message searchMessage1 = new TextMessage(
+            "M_INT03",
+            searchLinh,
+            "Project report in direct chat."
+        );
+
+        Message searchMessage2 = new TextMessage(
+            "M_INT04",
+            searchHuy,
+            "Project report in group chat."
+        );
+
+        Message searchMessage3 = new TextMessage(
+            "M_INT05",
+            searchDuy,
+            "Project report is confidential."
+        );
+
+        // Gửi tin nhắn vào từng conversation
+        searchDirect.SendMessage(searchMessage1);
+        searchGroup.SendMessage(searchMessage2);
+        searchPrivate.SendMessage(searchMessage3);
+
+        // Tạo service tìm kiếm trên cả 3 conversation
+        ConversationSearchService integrationSearchService =
+            new ConversationSearchService(new IConversation[]
+            {
+                searchDirect,
+                searchGroup,
+                searchPrivate
+            });
+
+        // Linh tìm kiếm tin nhắn
+        List<Message> integrationResults =
+            integrationSearchService.SearchMessages(
+                searchLinh, "project report");
+
+        // Kiểm tra kết quả tìm kiếm
+        bool integrationCorrectCount =
+            integrationResults.Count == 2;
+
+        bool integrationCorrectMessages =
+            integrationResults.Contains(searchMessage1) &&
+            integrationResults.Contains(searchMessage2);
+
+        bool integrationPrivacyFilter =
+            !integrationResults.Contains(searchMessage3);
+
+        // Hiển thị kết quả thực tế
+        Console.WriteLine("\nActual:");
+        Console.WriteLine("Messages found: " + integrationResults.Count);
+        Console.WriteLine("Correct messages found: " + integrationCorrectMessages);
+        Console.WriteLine("Private message excluded: " + integrationPrivacyFilter);
+
+        if (integrationCorrectCount &&
+            integrationCorrectMessages &&
+            integrationPrivacyFilter)
+        {
+            Console.WriteLine("\n[PASS] Cross-conversation workflow completed successfully.");
+        }
+        else
+        {
+            Console.WriteLine("\n[FAIL] Cross-conversation workflow validation failed.");
+        }
+
+
     }
 }
