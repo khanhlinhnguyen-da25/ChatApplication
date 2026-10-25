@@ -1,19 +1,28 @@
-// SystemMessage là message do hệ thống tạo ra, ví dụ thông báo một user tham gia nhóm.
+// Message do hệ thống tạo ra cho các domain event như user joined/left group.
+// SystemMessage vẫn nằm trong history như message bình thường nhưng được
+// render khác và được delivery theo nhánh system trong ConversationBase.
 public class SystemMessage : Message
 {
-    public string Text {get; }// Nội dung thông báo của hệ thống.
-    public SystemMessage(string id, User sender, string text) : base(id, sender)
+    // Constructor bắt buộc sender là SystemUser để user thường không thể giả
+    // mạo một system event.
+    public SystemMessage(string id, User sender, string text) : base(id, sender, text)
     {
+        if (sender is not SystemUser)
+        {
+            throw new ArgumentException(
+                "SystemMessage sender must be the system identity.",
+                nameof(sender));
+        }
         if(string.IsNullOrWhiteSpace(text))
         {
             throw new ArgumentException("Text cannot be null or whitespace.", nameof(text));
         }
-        Text=text;
     }
 
     public override string GetContent()
     {
-        // Thêm tiền tố để người đọc phân biệt system message với tin nhắn thường.
+        // Prefix giúp người đọc và search result phân biệt system event với
+        // nội dung do participant viết.
         return "[SYSTEM] " + Text;
     }
 

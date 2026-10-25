@@ -33,10 +33,15 @@ Implemented:
 - Participant validation
 - Message history and message validation
 - Text and system messages
-- Per-user, per-message read receipts
+- Per-user monotonic last-read message pointers
 - Online participant notifications
 - Case-insensitive message search
 - `IConversation` interface
+- Shared `ConversationBase` implementation for common conversation behavior
+- Dedicated `SystemUser` identity for system-generated messages
+- Cross-conversation message search for a user
+- Per-user last-read message pointers
+- Explicit inheritance, encapsulation, and polymorphism tests
 - Console-based functional tests in `Program.cs`
 
 ## Project Structure
@@ -47,11 +52,55 @@ ChatApplication/
 ├── Message.cs
 ├── TextMessage.cs
 ├── SystemMessage.cs
+├── SystemUser.cs
 ├── IConversation.cs
+├── ConversationBase.cs
 ├── DirectConversation.cs
 ├── GroupConversation.cs
 ├── ChatApplication.csproj
 └── README.md
+
+`ConversationBase` contains the behavior shared by both conversation types:
+participant management, message history, notifications, read receipts, and
+message search. `DirectConversation` adds the two-participant rule, while
+`GroupConversation` uses the default participant rule. Both remain usable
+through `IConversation` to demonstrate polymorphism.
+
+The application code consumes conversations through the `IConversation` type
+wherever it only needs shared behavior. For example, `Program.Main` creates
+concrete `DirectConversation` and `GroupConversation` objects on the right-hand
+side but stores them in `IConversation` variables. The `: IConversation`
+declarations remain on the concrete classes because they define which classes
+implement the contract; the `Program` declarations demonstrate substitutability
+and runtime polymorphism.
+
+`SystemMessage` uses the dedicated `SystemUser.Instance` identity. The system
+identity is not a conversation participant; `ConversationBase.SendMessage`
+allows it only for a validated `SystemMessage`, while ordinary messages still
+require a participant sender. System messages are stored in history and notify
+online participants. The simulation remains in-process and does not implement
+real networking.
+
+The sample program demonstrates group-created, user-added, user-joined, and
+user-left system events. The user-left event is currently a simulated history
+event because the model does not yet expose a participant-removal operation;
+it does not silently remove a participant.
+
+The console test suite makes the OOP evidence explicit:
+
+- `TEST 0` verifies that `TextMessage` and `SystemMessage` inherit shared
+  `Message` state while overriding `GetContent()`.
+- `TEST 0A` verifies that `User` state changes only through `GoOnline()` and
+  `GoOffline()`, and that conversation collections reject external mutation.
+- `TEST 9A` stores both direct and group conversations in `IConversation`
+  variables and verifies their different participant rules through the same
+  interface.
+
+`ConversationSearchService` searches every conversation containing the requested
+user and combines the matching messages. Read receipts are stored as one
+last-read message pointer per participant; marking a later message as read also
+marks all earlier messages as read, and attempting to move the pointer backward
+does not undo an existing receipt.
 ## Week 2 Implementation
 
 In Week 2, the project was extended to simulate communication between users.
@@ -82,4 +131,3 @@ The program will display:
 - There is no real client-server networking.
 - Automated unit test projects have not been added yet.
 - The current tests do not verify nonexistent user IDs through a user registry.
-- Searching across all conversations belonging to a user has not yet been demonstrated.

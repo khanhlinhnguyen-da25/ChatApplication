@@ -1,14 +1,20 @@
 using System;
-// User đại diện cho một người dùng trong ChatApplication.
+
+// Domain entity đại diện cho người dùng và trạng thái online của họ.
+// User không tự quản lý conversation/message; các trách nhiệm đó thuộc
+// ConversationBase để mỗi class có một responsibility rõ ràng.
 public class User
 {
-    // ID không có set để không thể thay đổi sau khi user được tạo.
+    // ID là identity bất biến sau khi object được tạo.
     public string Id { get; }
+    // Name có thể được quản lý nội bộ trong tương lai nhưng không cho caller
+    // tùy ý gán trực tiếp.
     public string Name { get; private set; }
-    // Chỉ các method của User được phép thay đổi trạng thái online.
+    // private set là phần encapsulation: trạng thái chỉ đổi qua GoOnline/
+    // GoOffline thay vì bị sửa trực tiếp từ code bên ngoài.
     public bool IsOnline { get; private set; }
 
-    // Constructor đảm bảo user luôn có ID, tên và trạng thái ban đầu hợp lệ.
+    // Constructor bảo đảm mọi User hợp lệ ngay từ lúc khởi tạo.
     public User(string id, string name)
     {
         if (string.IsNullOrWhiteSpace(id))
@@ -24,18 +30,19 @@ public class User
         Name = name;
         IsOnline = false;
     }
-    // Chuyển trạng thái user thành online.
+    // Public behavior để user chủ động chuyển sang online.
     public void GoOnline()
     {
         IsOnline = true;
     }
-    // Chuyển trạng thái user thành offline.
+    // Public behavior để user chủ động chuyển sang offline.
     public void GoOffline()
     {
         IsOnline = false;
     }
 
-    // Hiển thị notification nếu user đang online.
+    // Notification đang được mô phỏng bằng console. Offline user vẫn nhận
+    // được lời gọi nhưng không in ra, thể hiện behavior delivery cơ bản.
     public void ReceiveNotification(string notification)
     {
         if (string.IsNullOrWhiteSpace(notification))

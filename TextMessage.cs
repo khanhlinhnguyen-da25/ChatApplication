@@ -1,23 +1,20 @@
-// TextMessage kế thừa từ Message và chứa nội dung văn bản thông thường.
+// Message văn bản do một User trong conversation gửi.
+// Đây là subtype đơn giản nhất của Message.
 public class TextMessage : Message
 {
-    public string Text {get; }// Nội dung của tin nhắn.
 
-    // Constructor truyền ID và sender lên Message để lớp cha xử lý phần dùng chung.
-    public TextMessage(string id, User sender, string text) : base(id, sender)
+    // Ủy quyền validation chung (id, sender, text, timestamp) cho Message.
+    public TextMessage(string id, User sender, string text) : base(id, sender, text)
     {
         if(string.IsNullOrWhiteSpace(text))
         {
             throw new ArgumentException("Text cannot be null or whitespace.", nameof(text));
         }
-        Text=text;
     }
 
-    // Trả về nội dung văn bản khi conversation cần hiển thị message.
+    // Override điểm mở rộng của Message; text message không cần prefix.
     public override string GetContent()
     {
         return Text;
     }
-
-
 }

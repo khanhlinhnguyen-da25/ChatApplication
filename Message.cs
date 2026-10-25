@@ -1,15 +1,23 @@
 using System;
-// Message là abstract class, đóng vai trò là khuôn mẫu chung cho mọi loại tin nhắn.
-// Các lớp con hiện có: TextMessage và SystemMessage.
+// Abstract base class cho mọi message trong ứng dụng.
+// TextMessage và SystemMessage kế thừa state/validation chung, sau đó override
+// GetContent() để tạo cách hiển thị phù hợp với từng loại message.
 
 public abstract class Message
 {
-    public string Id {get; }// ID riêng của tin nhắn.
-    public User Sender {get; }// Người gửi message.
-    public DateTime Timestamp {get; }// Thời điểm message được tạo.
+    // Id dùng để nhận diện message và chống duplicate trong conversation.
+    public string Id {get; }
+    // Sender là User thường hoặc SystemUser đối với SystemMessage.
+    public User Sender {get; }
+    // Lưu UTC để kết quả không phụ thuộc timezone của máy chạy chương trình.
+    public DateTime Timestamp {get; }
 
-    // Constructor protected: chỉ các lớp kế thừa mới có thể gọi trực tiếp.
-    protected Message(string id, User sender)
+    // Nội dung gốc dùng chung cho search và các lớp con.
+    public string Text {get; }
+
+    // Protected để chỉ lớp message cụ thể mới được tạo thông qua constructor
+    // này; Message itself vẫn không thể khởi tạo trực tiếp.
+    protected Message(string id, User sender, string text)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -19,15 +27,19 @@ public abstract class Message
         {
             throw new ArgumentNullException(nameof(sender), "Sender cannot be null.");
         }
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            throw new ArgumentException("Message text cannot be empty.", nameof(text));
+        }
 
         Id = id;
         Sender = sender;
-        // Dùng UTC để thời gian không phụ thuộc vào múi giờ của máy chạy ứng dụng.
+        Text = text ?? throw new ArgumentNullException(nameof(text), "Text cannot be null.");
         Timestamp = DateTime.UtcNow;
     }
 
-    // Mỗi loại message có cách tạo nội dung hiển thị riêng.
-    // Lớp con bắt buộc override method này (tính đa hình).
+    // Polymorphic operation: conversation không cần biết subtype cụ thể, chỉ
+    // gọi GetContent() và runtime chọn implementation của lớp con.
     public abstract string GetContent();
  
     
