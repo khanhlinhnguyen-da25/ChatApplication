@@ -636,6 +636,58 @@ public class Program
             Console.WriteLine("[FAIL] IConversation polymorphism behavior is incorrect.");
         }
 
+        // TEST 9B: RemoveParticipant (rời nhóm) khác nhau theo subtype.
+        Console.WriteLine("\n---TEST 9B: LEAVE CONVERSATION---");
+        bool directLeaveRejected = false;
+        try
+        {
+            directAsInterface.RemoveParticipant(polymorphicUser2);
+        }
+        catch (InvalidOperationException)
+        {
+            directLeaveRejected = true;
+        }
+
+        Message leaverMessage = new TextMessage("M009", polymorphicUser3, "I will leave soon.");
+        groupAsInterface.SendMessage(leaverMessage);
+        groupAsInterface.MarkAsRead(polymorphicUser3, leaverMessage);
+        groupAsInterface.RemoveParticipant(polymorphicUser3);
+        groupAsInterface.SendMessage(new SystemMessage(
+            "SM009", SystemUser.Instance, "Lan left the group."));
+
+        bool leaverRejectedAfterLeaving = false;
+        try
+        {
+            groupAsInterface.SendMessage(new TextMessage("M010", polymorphicUser3, "Still here?"));
+        }
+        catch (InvalidOperationException)
+        {
+            leaverRejectedAfterLeaving = true;
+        }
+
+        bool groupMinimumRejected = false;
+        try
+        {
+            groupAsInterface.RemoveParticipant(polymorphicUser2);
+        }
+        catch (InvalidOperationException)
+        {
+            groupMinimumRejected = true;
+        }
+
+        if (directLeaveRejected &&
+            leaverRejectedAfterLeaving &&
+            groupMinimumRejected &&
+            !groupAsInterface.Participants.Contains(polymorphicUser3) &&
+            groupAsInterface.Messages.Contains(leaverMessage))
+        {
+            Console.WriteLine("[PASS] Leave rules differ by conversation type and history is preserved.");
+        }
+        else
+        {
+            Console.WriteLine("[FAIL] Leave conversation behavior is incorrect.");
+        }
+
         // TEST 10: SystemMessage vừa là Message subtype vừa là domain event.
         Console.WriteLine("\n---TEST 10: SYSTEM MESSAGE---");
 

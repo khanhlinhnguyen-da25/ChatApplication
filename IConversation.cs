@@ -28,6 +28,9 @@ public interface IConversation
     // Thêm participant và khởi tạo read state cho participant đó.
     void AddParticipant(User user);
 
+    // Xóa participant (rời nhóm) và xóa read state của participant đó.
+    void RemoveParticipant(User user);
+
     // Validate, lưu message và notify các participant online.
     void SendMessage(Message message);
 

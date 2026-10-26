@@ -121,6 +121,26 @@ public abstract class ConversationBase : IConversation
         lastReadMessage[user] = null;
     }
 
+    public void RemoveParticipant(User user)
+    {
+        if (user == null)
+        {
+            throw new ArgumentNullException(nameof(user), "User cannot be null.");
+        }
+        if (!participants.Contains(user))
+        {
+            throw new InvalidOperationException("User is not a participant of the conversation.");
+        }
+
+        // Rule riêng của từng loại conversation: direct không cho rời,
+        // group không được xuống dưới số thành viên tối thiểu.
+        ValidateCanRemoveParticipant();
+        participants.Remove(user);
+
+        // Xóa read state của user; message họ đã gửi vẫn giữ trong history.
+        lastReadMessage.Remove(user);
+    }
+
     public void SendMessage(Message message)
     {
         // Message phải hợp lệ trước khi được thêm vào history.
@@ -204,6 +224,11 @@ public abstract class ConversationBase : IConversation
     {
         // GroupConversation dùng rule mặc định. DirectConversation override
         // method này để giới hạn conversation ở hai participant.
+    }
+
+    protected virtual void ValidateCanRemoveParticipant()
+    {
+        // Mặc định cho phép rời; lớp con override để áp rule riêng.
     }
 
     private void ValidateReadReceiptArguments(User user, Message message)

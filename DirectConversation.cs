@@ -18,6 +18,12 @@ public class DirectConversation : ConversationBase
         }
     }
 
+    protected override void ValidateCanRemoveParticipant()
+    {
+        throw new InvalidOperationException(
+            "Direct conversation participants cannot leave.");
+    }
+
     protected override void ValidateCanAddParticipant()
     {
         // AddParticipant() trong lớp cha gọi hook này trước khi thêm user.
