@@ -2,6 +2,10 @@
 
 Course: Object-Oriented Programming (OOP) · Semester 1, 2026-2027 · Instructor: Huỳnh Xuân Phụng
 
+**Team Members:**
+- **Nguyễn Trần Khánh Linh** – Student ID: 25110036
+- **Nguyễn Lê Khánh Duy** – Student ID: 25110011
+
 > **Important:** message delivery and "real-time" notifications are **simulated
 > inside a single process**. The project uses no sockets and no real network.
 > How to extend the design to a real client-server system is described in
@@ -52,6 +56,7 @@ ChatApplication/
 ├── GroupConversation.cs           # Group chat (at least 2 people)
 ├── ConversationSearchService.cs   # Search across multiple conversations
 ├── ChatApplication.csproj
+├── output.txt                     # Console test evidence (30 PASS, 0 FAIL)
 └── README.md
 ```
 
@@ -224,35 +229,64 @@ composition, `o--` aggregation, `-->` association, `..>` dependency.
 
 ## 6. Testing and Evidence
 
-The tests are console checks in `Program.cs`; each prints `[PASS]` or `[FAIL]`.
-There is no separate unit-test project yet.
+Tests are console-based checks implemented in `Program.cs`, not a separate unit-test framework. Each test reports `[PASS]` or `[FAIL]`. The final run produced **30 PASS and 0 FAIL**; the complete console output is saved in [`output.txt`](output.txt).
 
-| Test | Content | Type |
+### 6.1 Functional, OOP, and Validation Tests (21)
+
+| Test | What is checked | Category |
 |---|---|---|
-| 0 | Inheritance: `TextMessage` and `SystemMessage` share `Message` state | Polymorphism / inheritance |
-| 0A | Encapsulation: user state and collections cannot be mutated from outside | Encapsulation |
-| 1 | Reject an empty message | Validation error |
-| 2 | Reject a sender who is not a participant | Validation error |
-| 3 | Message history | Happy path |
-| 4 | Read receipt | Happy path |
-| 5 | Search within one conversation | Happy path |
-| 6, 6A, 6B, 6C | Cross-conversation search, participation filter, case-insensitivity, input validation | Happy path and errors |
-| 7 | Group conversation | Happy path |
-| 8 | Notifications for online/offline users | Happy path |
-| 9, 9A | Polymorphism through `IConversation`: Direct and Group have different add-participant rules | Polymorphism |
-| 9B | Leaving: Direct rejects, Group accepts, Group rejects at 2 members, history preserved | Polymorphism and errors |
-| 10 | `SystemMessage` | Happy path |
-| 11 | Reject a `SystemMessage` signed by a normal user | Validation error |
-| 12 | Last-read pointer only moves forward | Validation |
+| 0 | `TextMessage` and `SystemMessage` inherit from `Message` | Inheritance |
+| 0A | User state and read-only conversation collections | Encapsulation |
+| 1 | Reject empty message content | Validation |
+| 2 | Reject a sender who is not a participant | Validation |
+| 3 | Store and display message history in order | Functional |
+| 4 | Mark messages as read and check read receipts | Functional |
+| 5 | Search messages within a conversation | Functional |
+| 6 | Search across a user's conversations | Functional |
+| 6A | Exclude conversations the user does not participate in | Validation |
+| 6B | Case-insensitive keyword search | Functional |
+| 6C | Reject invalid user or search keyword | Validation |
+| 7 | Group conversation behavior | Functional |
+| 8 | Online/offline notification behavior | Functional |
+| 9 | Message polymorphism | OOP |
+| 9A | `IConversation` polymorphism | OOP |
+| 9B | Leave rules for Direct and Group conversations | OOP / Validation |
+| 10 | System message behavior | Functional |
+| 11 | Reject a system message with an invalid sender | Validation |
+| 12 | Last-read pointer does not move backwards | Validation |
+| 13 | Reject whitespace-only message content | Validation |
+| 14 | Reject duplicate participants | Validation |
 
-Run `dotnet run` and attach the output to the report as evidence. To list failed
-tests only:
+### 6.2 Integration Tests (3)
+
+| Test | Workflow | What is checked |
+|---|---|---|
+| Integration Test 1 | Direct Chat Workflow | Send message, history, notification, read receipt, search |
+| Integration Test 2 | Group Chat Workflow | Participants, text messages, system messages, message history |
+| Integration Test 3 | Cross-Conversation Workflow | Search across conversations and exclude unrelated private messages |
+
+### 6.3 Final Verification Tests (6)
+
+| Test | Scenario | Expected behavior |
+|---|---|---|
+| Final Test 1 | Group Member Leaves | Member removed; old history kept; new messages from the former member rejected |
+| Final Test 2 | Duplicate Message Protection | Duplicate message ID rejected; history unchanged |
+| Final Test 3 | Read Receipt Consistency | Marking an older message as read does not move the pointer backwards |
+| Final Test 4 | Group Member Leave Rule | Leaving succeeds; history remains; former member cannot send new messages |
+| Final Test 5 | Direct Conversation Leave Rule | Leaving is rejected; both participants remain |
+| Final Test 6 | Minimum Group Participants | A group cannot be reduced below two participants |
+
+Final Tests 1 and 4 intentionally overlap to recheck the group-leave workflow in the final version.
+
+### 6.4 Run and Save Test Evidence
 
 ```powershell
-dotnet run | Select-String "FAIL"
+dotnet run > output.txt
+(Select-String -Path output.txt -Pattern "\[PASS\]").Count
+(Select-String -Path output.txt -Pattern "\[FAIL\]").Count
 ```
 
-If nothing is printed, no test failed.
+**Verified final result:** `30 PASS`, `0 FAIL`. The file `output.txt` contains the actual console output, including the demo scenario and test results.
 
 ## 7. Build and Run
 
@@ -262,6 +296,8 @@ Requirement: .NET SDK 10 (`net10.0`).
 dotnet build
 dotnet run
 ```
+
+To save the output as evidence, run `dotnet run > output.txt`.
 
 The program prints the demo scenario (users, Direct and Group conversations,
 history, search, read receipts) and then runs the tests in order.
@@ -304,21 +340,3 @@ This section is a description only; it is not implemented.
 - Some test data uses Vietnamese text without diacritics; it has not been
   standardized.
 
-## 10. AI Usage Log
-
-Adjust this table to match how you actually used AI before submitting.
-
-| Date | Tool | Purpose / prompt summary | Result used | How it was verified |
-|---|---|---|---|---|
-| 2026-10-26 | GitHub Copilot | Review what the project is missing | List of missing items | Compared against the assignment |
-| 2026-10-26 | GitHub Copilot | Add `RemoveParticipant` and test 9B | Code and test | `dotnet run`, test 9B reports PASS |
-| 2026-10-26 | GitHub Copilot | Draw Mermaid UML, rewrite README | Diagram and README | Viewed on GitHub, compared against the code |
-
-## 11. Oral Defense Preparation
-
-Possible questions:
-- Why use both the `IConversation` interface and the `ConversationBase` class?
-- Why is `SystemUser` not a participant but can still send messages?
-- Why does the read pointer only move forward?
-- Which classes must change to add `ImageMessage` or a broadcast channel?
-- Why might `ConversationBase` be seen as a God class, and how would you split it?
