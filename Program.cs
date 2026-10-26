@@ -740,30 +740,46 @@ foreach (Message message in crossSearchResults)
             Console.WriteLine("\n[FAIL] IConversation polymorphism validation failed.");
         }
 
-<<<<<<< HEAD
         // TEST 9B: RemoveParticipant (rời nhóm) khác nhau theo subtype.
         Console.WriteLine("\n---TEST 9B: LEAVE CONVERSATION---");
+
+        Console.WriteLine("Input: A direct chat and a group chat with three members.");
+        Console.WriteLine("Action: Try to remove participants through IConversation.");
+        Console.WriteLine("Expected: Direct rejects leaving; Group allows it until two members remain; history is preserved.");
+
+        User leaveUser1 = new User("U004", "Mai");
+        User leaveUser2 = new User("U005", "Nam");
+        User leaveUser3 = new User("U006", "Lan");
+        IConversation directAsInterface = new DirectConversation(
+            "DC003",
+            "Leave Direct Chat",
+            new List<User> { leaveUser1, leaveUser2 });
+        IConversation groupAsInterface = new GroupConversation(
+            "GC002",
+            "Leave Group Chat",
+            new List<User> { leaveUser1, leaveUser2, leaveUser3 });
+
         bool directLeaveRejected = false;
         try
         {
-            directAsInterface.RemoveParticipant(polymorphicUser2);
+            directAsInterface.RemoveParticipant(leaveUser2);
         }
         catch (InvalidOperationException)
         {
             directLeaveRejected = true;
         }
 
-        Message leaverMessage = new TextMessage("M009", polymorphicUser3, "I will leave soon.");
+        Message leaverMessage = new TextMessage("M009", leaveUser3, "I will leave soon.");
         groupAsInterface.SendMessage(leaverMessage);
-        groupAsInterface.MarkAsRead(polymorphicUser3, leaverMessage);
-        groupAsInterface.RemoveParticipant(polymorphicUser3);
+        groupAsInterface.MarkAsRead(leaveUser3, leaverMessage);
+        groupAsInterface.RemoveParticipant(leaveUser3);
         groupAsInterface.SendMessage(new SystemMessage(
             "SM009", SystemUser.Instance, "Lan left the group."));
 
         bool leaverRejectedAfterLeaving = false;
         try
         {
-            groupAsInterface.SendMessage(new TextMessage("M010", polymorphicUser3, "Still here?"));
+            groupAsInterface.SendMessage(new TextMessage("M010", leaveUser3, "Still here?"));
         }
         catch (InvalidOperationException)
         {
@@ -773,7 +789,7 @@ foreach (Message message in crossSearchResults)
         bool groupMinimumRejected = false;
         try
         {
-            groupAsInterface.RemoveParticipant(polymorphicUser2);
+            groupAsInterface.RemoveParticipant(leaveUser2);
         }
         catch (InvalidOperationException)
         {
@@ -783,7 +799,7 @@ foreach (Message message in crossSearchResults)
         if (directLeaveRejected &&
             leaverRejectedAfterLeaving &&
             groupMinimumRejected &&
-            !groupAsInterface.Participants.Contains(polymorphicUser3) &&
+            !groupAsInterface.Participants.Contains(leaveUser3) &&
             groupAsInterface.Messages.Contains(leaverMessage))
         {
             Console.WriteLine("[PASS] Leave rules differ by conversation type and history is preserved.");
@@ -794,12 +810,6 @@ foreach (Message message in crossSearchResults)
         }
 
         // TEST 10: SystemMessage vừa là Message subtype vừa là domain event.
-=======
-
-       
-        // TEST 10: Kiểm tra SystemMessage.
-        // SystemMessage được lưu trong history thông qua kiểu Message.
->>>>>>> 21e1f55c7b0a90a97fa0207f86c808f6c39db3fe
         Console.WriteLine("\n---TEST 10: SYSTEM MESSAGE---");
 
         Console.WriteLine("Conversation: Group Chat");
